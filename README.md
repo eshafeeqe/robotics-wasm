@@ -26,7 +26,7 @@ Before running this project, ensure you have the following installed on your mac
 
 1.  **Clone the repository:**
     ```bash
-    git clone <YOUR_GITHUB_REPO_URL>
+    git clone https://github.com/eshafeeqe/robotics-wasm.git
     cd robotics-wasm
     ```
 
