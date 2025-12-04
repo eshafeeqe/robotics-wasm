@@ -73,7 +73,7 @@ Run the Rust unit tests to verify the math:
 cargo test
 ```
 
-All tests should pass (14 tests covering geometry transformations, robot configuration, and forward kinematics).
+All tests should pass (covering geometry transformations, DH parameters, robot configuration, and forward kinematics).
 
 ## 📂 Project Structure
 
@@ -82,8 +82,9 @@ All tests should pass (14 tests covering geometry transformations, robot configu
 ├── src/
 │   ├── lib.rs              # WASM interface and main entry point
 │   ├── geometry3d.rs       # 3D geometry with nalgebra::Matrix4
-│   ├── robot.rs            # Robot arm configuration
-│   └── kinematics.rs       # Forward kinematics algorithm (3D)
+│   ├── robot.rs            # Robot arm configuration (simple + DH modes)
+│   ├── dh_parameters.rs    # Denavit-Hartenberg parameter system
+│   └── kinematics.rs       # Forward kinematics algorithm (3D + DH)
 ├── index.html              # Main UI with canvas and controls
 ├── app.js                  # JavaScript application logic
 ├── styles.css              # Clean, Desmos-inspired styling
@@ -106,7 +107,11 @@ The simulator uses **nalgebra Matrix4** for 3D homogeneous transformation matric
 
 The result is a chain of positions from base → joint1 → joint2 → end-effector.
 
-**Phase 2 Update:** All calculations now use 3D transforms with nalgebra, even though planar robots have Z=0. This prepares the codebase for future spatial robots and DH parameters.
+**Phase 2 Update:** All calculations now use 3D transforms with nalgebra, even though planar robots have Z=0.
+
+**Phase 2b Update:** Added full Denavit-Hartenberg parameter support using Standard DH convention. Robots can now be configured using either:
+- Simple mode: Just link lengths (legacy planar robots)
+- DH mode: Full 4-parameter specification (a, α, d, θ) for arbitrary robot configurations
 
 ### The Pipeline
 
@@ -141,10 +146,16 @@ Visual Feedback!
 - 3D positions (Z always 0 for planar robots)
 - Foundation for future 3D robots
 
-### Phase 2b: Enhanced Math & DH Parameters (Next)
-- Implement Denavit-Hartenberg (DH) parameter tables
-- Support arbitrary-DOF robots
+### Phase 2b: ✅ DH Parameters Complete
+- Implemented Denavit-Hartenberg (DH) parameter system
+- Support for both simple planar and DH-based robots
+- Standard DH convention: Rot(Z,θ) * Trans(Z,d) * Trans(X,a) * Rot(X,α)
+- Dual-mode forward kinematics (legacy planar + DH-based)
+
+### Phase 2c: Extended Features (Next)
+- Support arbitrary-DOF robots (3+ joints)
 - Add workspace visualization
+- Expose DH parameter configuration in UI
 
 ### Phase 3: 3D Visualization
 - Integrate Three.js / React-Three-Fiber

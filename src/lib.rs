@@ -3,6 +3,7 @@ use wasm_bindgen::prelude::*;
 mod geometry3d;
 mod robot;
 mod kinematics;
+mod dh_parameters;
 
 use robot::RobotArm;
 use kinematics::{forward_kinematics, JointPosition3D};
