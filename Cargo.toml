@@ -8,3 +8,5 @@ crate-type = ["cdylib"] # Crucial: tells Rust to build a .wasm file
 
 [dependencies]
 wasm-bindgen = "0.2" # The bridge between Rust and JavaScript
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"

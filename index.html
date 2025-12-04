@@ -2,39 +2,96 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Robotics WASM Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2-DOF Robot Arm Simulator | Robo-Desmos</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Rust + WASM Robotics</h1>
-    
-    <!-- Inputs for our demo -->
-    <input type="text" id="name-input" placeholder="Enter your name" />
-    <button id="run-btn">Run Rust Code</button>
-    
-    <p id="output" style="color: blue; font-weight: bold;"></p>
+    <div class="container">
+        <h1>2-DOF Planar Robot Arm</h1>
+        <p class="subtitle">Interactive forward kinematics visualization powered by Rust + WebAssembly</p>
 
-    <!-- THE MAGIC HAPPENS HERE -->
-    <script type="module">
-        // 1. Import the init function and your exported function from the 'pkg' folder
-        import init, { hello_robotics } from './pkg/robotics_wasm.js';
+        <div class="app-layout">
+            <!-- Canvas Container -->
+            <div class="canvas-container">
+                <canvas id="robot-canvas" width="800" height="600"></canvas>
+            </div>
 
-        async function run() {
-            // 2. Initialize the WASM module (downloads and compiles the .wasm file)
-            await init();
+            <!-- Controls Panel -->
+            <div class="controls-panel">
+                <!-- Link Configuration -->
+                <div class="control-section">
+                    <h2>Robot Configuration</h2>
+                    <div class="link-inputs">
+                        <div class="link-input-group">
+                            <label for="link1">Link 1 (m)</label>
+                            <input type="number" id="link1" min="0.1" max="5" step="0.1" value="2.0">
+                        </div>
+                        <div class="link-input-group">
+                            <label for="link2">Link 2 (m)</label>
+                            <input type="number" id="link2" min="0.1" max="5" step="0.1" value="1.5">
+                        </div>
+                    </div>
+                    <button id="update-robot" class="preset-btn" style="width: 100%; margin-top: 10px;">
+                        Update Robot
+                    </button>
+                </div>
 
-            // 3. Set up button click handler
-            document.getElementById("run-btn").addEventListener("click", () => {
-                const input = document.getElementById("name-input").value;
-                
-                // 4. Call the Rust function!
-                const result = hello_robotics(input);
-                
-                // 5. Display result
-                document.getElementById("output").innerText = result;
-            });
-        }
+                <div class="divider"></div>
 
-        run();
-    </script>
+                <!-- Joint Controls -->
+                <div class="control-section">
+                    <h2>Joint Angles</h2>
+
+                    <div class="control-group">
+                        <label>
+                            <span>θ1 (deg)</span>
+                            <span class="value-display" id="theta1-value">0</span>
+                        </label>
+                        <input type="range" id="theta1" min="-180" max="180" value="0" step="1">
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <span>θ2 (deg)</span>
+                            <span class="value-display" id="theta2-value">0</span>
+                        </label>
+                        <input type="range" id="theta2" min="-180" max="180" value="0" step="1">
+                    </div>
+
+                    <!-- Preset Configurations -->
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-preset="zero">Zero (Home)</button>
+                        <button class="preset-btn" data-preset="right">Right Angle</button>
+                        <button class="preset-btn" data-preset="folded">Folded</button>
+                        <button class="preset-btn" data-preset="stretched">Stretched</button>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <!-- Info Display -->
+                <div class="control-section">
+                    <h2>End-Effector Position</h2>
+                    <div class="info-panel">
+                        <div class="info-row">
+                            <span class="info-label">X:</span>
+                            <span class="info-value" id="pos-x">0.000</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Y:</span>
+                            <span class="info-value" id="pos-y">0.000</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Distance:</span>
+                            <span class="info-value" id="pos-dist">0.000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
 </body>
 </html>
