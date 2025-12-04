@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Robotics WASM Demo</title>
+</head>
+<body>
+    <h1>Rust + WASM Robotics</h1>
+    
+    <!-- Inputs for our demo -->
+    <input type="text" id="name-input" placeholder="Enter your name" />
+    <button id="run-btn">Run Rust Code</button>
+    
+    <p id="output" style="color: blue; font-weight: bold;"></p>
+
+    <!-- THE MAGIC HAPPENS HERE -->
+    <script type="module">
+        // 1. Import the init function and your exported function from the 'pkg' folder
+        import init, { hello_robotics } from './pkg/robotics_wasm.js';
+
+        async function run() {
+            // 2. Initialize the WASM module (downloads and compiles the .wasm file)
+            await init();
+
+            // 3. Set up button click handler
+            document.getElementById("run-btn").addEventListener("click", () => {
+                const input = document.getElementById("name-input").value;
+                
+                // 4. Call the Rust function!
+                const result = hello_robotics(input);
+                
+                // 5. Display result
+                document.getElementById("output").innerText = result;
+            });
+        }
+
+        run();
+    </script>
+</body>
+</html>

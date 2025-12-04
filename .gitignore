@@ -1,0 +1,20 @@
+/target
+
+.nadi
+
+# Rust Build Artifacts
+target/
+**/*.rs.bk
+
+# WASM-Pack Generated Artifacts
+# We ignore this because it is regenerated every time you build
+pkg/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+
+# IDE Specific (Optional but recommended)
+.vscode/
+.idea/
+*.swp
