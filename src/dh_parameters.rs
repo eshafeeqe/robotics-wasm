@@ -1,7 +1,8 @@
 use crate::geometry3d::Transform3D;
+use serde::{Deserialize, Serialize};
 
 /// Type of joint in the robot
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum JointType {
     /// Revolute joint: θ is variable, d is fixed
     Revolute,
@@ -13,7 +14,7 @@ pub enum JointType {
 ///
 /// Using Standard (Classic) DH Convention:
 /// T(i-1,i) = Rot(Z, θ) * Trans(Z, d) * Trans(X, a) * Rot(X, α)
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DHParameter {
     /// a: Link length (distance along X axis from Z_i-1 to Z_i)
     pub a: f64,

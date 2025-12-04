@@ -8,6 +8,13 @@ class RobotVisualizerApp {
         this.scale = 80; // pixels per meter
         this.centerX = 400;
         this.centerY = 300;
+
+        // Configuration state
+        this.mode = 'simple'; // 'simple' or 'dh'
+        this.numJoints = 2;
+        this.linkLengths = [2.0, 1.5];
+        this.dhParams = [];
+        this.jointAngles = [0, 0];
     }
 
     async initialize() {
@@ -19,6 +26,9 @@ class RobotVisualizerApp {
 
         // Setup canvas
         this.setupCanvas();
+
+        // Generate initial UI
+        this.generateUI();
 
         // Create initial robot
         this.createSimulator();
@@ -41,31 +51,149 @@ class RobotVisualizerApp {
         this.centerY = this.canvas.height / 2;
     }
 
-    createSimulator() {
-        const l1 = parseFloat(document.getElementById('link1').value);
-        const l2 = parseFloat(document.getElementById('link2').value);
+    generateUI() {
+        this.generateLinkInputs();
+        this.generateDHInputs();
+        this.generateJointAngleSliders();
+        this.updatePresetButtons();
+    }
 
-        this.simulator = new RobotSimulator(l1, l2);
-        console.log(`Robot created with L1=${l1}, L2=${l2}`);
+    generateLinkInputs() {
+        const container = document.getElementById('link-inputs-container');
+        container.innerHTML = '';
+
+        for (let i = 0; i < this.numJoints; i++) {
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'link-input-item';
+
+            const defaultLength = this.linkLengths[i] || 1.5;
+
+            linkDiv.innerHTML = `
+                <label for="link-${i}">Link ${i + 1} (m)</label>
+                <input type="number" id="link-${i}" min="0.1" max="5" step="0.1" value="${defaultLength}">
+            `;
+
+            container.appendChild(linkDiv);
+        }
+    }
+
+    generateDHInputs() {
+        const container = document.getElementById('dh-inputs-container');
+        container.innerHTML = '';
+
+        for (let i = 0; i < this.numJoints; i++) {
+            const dhJoint = document.createElement('div');
+            dhJoint.className = 'dh-joint';
+
+            // Default DH parameters for planar robot
+            const defaultA = this.linkLengths[i] || 1.5;
+            const defaultAlpha = 0.0;
+            const defaultD = 0.0;
+            const defaultTheta = 0.0;
+
+            dhJoint.innerHTML = `
+                <div class="dh-joint-header">Joint ${i + 1}</div>
+                <div class="dh-param-grid">
+                    <div class="dh-param-item">
+                        <label>a (Link Length)</label>
+                        <input type="number" id="dh-a-${i}" step="0.1" value="${defaultA}">
+                    </div>
+                    <div class="dh-param-item">
+                        <label>α (Twist, rad)</label>
+                        <input type="number" id="dh-alpha-${i}" step="0.1" value="${defaultAlpha}">
+                    </div>
+                    <div class="dh-param-item">
+                        <label>d (Offset)</label>
+                        <input type="number" id="dh-d-${i}" step="0.1" value="${defaultD}">
+                    </div>
+                    <div class="dh-param-item">
+                        <label>θ (Angle, rad)</label>
+                        <input type="number" id="dh-theta-${i}" step="0.1" value="${defaultTheta}">
+                    </div>
+                </div>
+                <div class="dh-joint-type">
+                    <label>
+                        <input type="radio" name="joint-type-${i}" value="Revolute" checked>
+                        Revolute
+                    </label>
+                    <label>
+                        <input type="radio" name="joint-type-${i}" value="Prismatic">
+                        Prismatic
+                    </label>
+                </div>
+            `;
+
+            container.appendChild(dhJoint);
+        }
+    }
+
+    generateJointAngleSliders() {
+        const container = document.getElementById('joint-angles-container');
+        container.innerHTML = '';
+
+        for (let i = 0; i < this.numJoints; i++) {
+            const angleDiv = document.createElement('div');
+            angleDiv.className = 'control-group';
+
+            const currentAngle = this.jointAngles[i] || 0;
+
+            angleDiv.innerHTML = `
+                <label>
+                    <span>θ${i + 1} (deg)</span>
+                    <span class="value-display" id="theta${i}-value">${currentAngle}</span>
+                </label>
+                <input type="range" id="theta${i}" min="-180" max="180" value="${currentAngle}" step="1">
+            `;
+
+            container.appendChild(angleDiv);
+
+            // Add event listener
+            const slider = angleDiv.querySelector('input[type="range"]');
+            const valueDisplay = angleDiv.querySelector('.value-display');
+
+            slider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                valueDisplay.textContent = value;
+                this.jointAngles[i] = value;
+                this.updateAngles();
+            });
+        }
+    }
+
+    updatePresetButtons() {
+        const presetContainer = document.getElementById('preset-buttons');
+        // Only show presets for 2-DOF robots
+        presetContainer.style.display = this.numJoints === 2 ? 'grid' : 'none';
     }
 
     setupControls() {
-        // Joint angle sliders
-        const theta1Slider = document.getElementById('theta1');
-        const theta2Slider = document.getElementById('theta2');
-        const theta1Value = document.getElementById('theta1-value');
-        const theta2Value = document.getElementById('theta2-value');
-
-        theta1Slider.addEventListener('input', (e) => {
-            const value = parseInt(e.target.value);
-            theta1Value.textContent = value;
-            this.updateAngles();
+        // Mode selector
+        document.querySelectorAll('input[name="robot-mode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.mode = e.target.value;
+                this.updateModeUI();
+            });
         });
 
-        theta2Slider.addEventListener('input', (e) => {
+        // Number of joints slider
+        const numJointsSlider = document.getElementById('num-joints');
+        const numJointsValue = document.getElementById('num-joints-value');
+
+        numJointsSlider.addEventListener('input', (e) => {
             const value = parseInt(e.target.value);
-            theta2Value.textContent = value;
-            this.updateAngles();
+            numJointsValue.textContent = value;
+            this.numJoints = value;
+
+            // Resize arrays
+            while (this.linkLengths.length < this.numJoints) {
+                this.linkLengths.push(1.5);
+            }
+            while (this.jointAngles.length < this.numJoints) {
+                this.jointAngles.push(0);
+            }
+
+            // Regenerate UI
+            this.generateUI();
         });
 
         // Update robot button
@@ -74,41 +202,116 @@ class RobotVisualizerApp {
             this.updateAngles();
         });
 
-        // Preset buttons
+        // Preset buttons (only for 2-DOF)
         const presets = {
-            'zero': { theta1: 0, theta2: 0 },
-            'right': { theta1: 45, theta2: 90 },
-            'folded': { theta1: 90, theta2: -90 },
-            'stretched': { theta1: 0, theta2: 180 }
+            'zero': { angles: [0, 0] },
+            'right': { angles: [45, 90] },
+            'folded': { angles: [90, -90] },
+            'stretched': { angles: [0, 180] }
         };
 
         document.querySelectorAll('.preset-btn[data-preset]').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                if (this.numJoints !== 2) return;
+
                 const presetName = e.target.getAttribute('data-preset');
                 const preset = presets[presetName];
 
                 if (preset) {
-                    document.getElementById('theta1').value = preset.theta1;
-                    document.getElementById('theta2').value = preset.theta2;
-                    document.getElementById('theta1-value').textContent = preset.theta1;
-                    document.getElementById('theta2-value').textContent = preset.theta2;
+                    for (let i = 0; i < 2; i++) {
+                        document.getElementById(`theta${i}`).value = preset.angles[i];
+                        document.getElementById(`theta${i}-value`).textContent = preset.angles[i];
+                        this.jointAngles[i] = preset.angles[i];
+                    }
                     this.updateAngles();
                 }
             });
         });
     }
 
+    updateModeUI() {
+        const simpleConfig = document.getElementById('simple-config');
+        const dhConfig = document.getElementById('dh-config');
+
+        if (this.mode === 'simple') {
+            simpleConfig.style.display = 'block';
+            dhConfig.style.display = 'none';
+        } else {
+            simpleConfig.style.display = 'none';
+            dhConfig.style.display = 'block';
+        }
+    }
+
+    createSimulator() {
+        try {
+            if (this.mode === 'simple') {
+                // Read link lengths from UI
+                const lengths = [];
+                for (let i = 0; i < this.numJoints; i++) {
+                    const input = document.getElementById(`link-${i}`);
+                    lengths.push(parseFloat(input.value));
+                }
+                this.linkLengths = lengths;
+
+                // Create simple robot
+                if (this.numJoints === 2) {
+                    // Use legacy constructor for backwards compatibility
+                    this.simulator = new RobotSimulator(lengths[0], lengths[1]);
+                } else {
+                    // Use new_simple for arbitrary-DOF
+                    this.simulator = RobotSimulator.new_simple(lengths);
+                }
+
+                console.log(`Created ${this.numJoints}-DOF simple robot with lengths:`, lengths);
+            } else {
+                // Read DH parameters from UI
+                const dhParams = [];
+                for (let i = 0; i < this.numJoints; i++) {
+                    const a = parseFloat(document.getElementById(`dh-a-${i}`).value);
+                    const alpha = parseFloat(document.getElementById(`dh-alpha-${i}`).value);
+                    const d = parseFloat(document.getElementById(`dh-d-${i}`).value);
+                    const theta = parseFloat(document.getElementById(`dh-theta-${i}`).value);
+                    const jointType = document.querySelector(`input[name="joint-type-${i}"]:checked`).value;
+
+                    dhParams.push({
+                        a,
+                        alpha,
+                        d,
+                        theta,
+                        joint_type: jointType,
+                        joint_offset: jointType === 'Revolute' ? theta : d
+                    });
+                }
+
+                // Create DH robot
+                this.simulator = RobotSimulator.new_dh(dhParams);
+                console.log(`Created ${this.numJoints}-DOF DH robot`);
+            }
+        } catch (error) {
+            console.error('Failed to create robot:', error);
+            alert('Failed to create robot: ' + error);
+        }
+    }
+
     updateAngles() {
-        const theta1 = parseFloat(document.getElementById('theta1').value);
-        const theta2 = parseFloat(document.getElementById('theta2').value);
+        if (!this.simulator) return;
 
-        // Convert degrees to radians for the simulator
-        this.simulator.set_angles(
-            theta1 * Math.PI / 180,
-            theta2 * Math.PI / 180
-        );
+        try {
+            // Convert degrees to radians
+            const anglesRad = this.jointAngles.map(deg => deg * Math.PI / 180);
 
-        this.render();
+            if (this.numJoints === 2) {
+                // Use legacy method for 2-DOF
+                this.simulator.set_angles(anglesRad[0], anglesRad[1]);
+            } else {
+                // Use new array method for arbitrary-DOF
+                this.simulator.set_angles_array(anglesRad);
+            }
+
+            this.render();
+        } catch (error) {
+            console.error('Failed to update angles:', error);
+        }
     }
 
     render() {
@@ -192,6 +395,8 @@ class RobotVisualizerApp {
     }
 
     drawRobot() {
+        if (!this.simulator) return;
+
         const positions = this.simulator.get_joint_positions();
 
         if (!positions || positions.length === 0) {
@@ -200,11 +405,9 @@ class RobotVisualizerApp {
         }
 
         // Convert world coordinates (3D) to canvas coordinates (2D)
-        // Ignoring Z coordinate for now (planar robots have Z=0)
         const canvasPositions = positions.map(pos => ({
             x: this.centerX + pos.x * this.scale,
             y: this.centerY - pos.y * this.scale // Flip Y for canvas
-            // pos.z ignored (always 0 for planar robots)
         }));
 
         // Draw links
@@ -253,6 +456,8 @@ class RobotVisualizerApp {
     }
 
     updateInfo() {
+        if (!this.simulator) return;
+
         const endEffector = this.simulator.get_end_effector_position();
 
         if (endEffector) {
