@@ -1,11 +1,11 @@
 use wasm_bindgen::prelude::*;
 
-mod geometry;
+mod geometry3d;
 mod robot;
 mod kinematics;
 
 use robot::RobotArm;
-use kinematics::{forward_kinematics, JointPosition};
+use kinematics::{forward_kinematics, JointPosition3D};
 
 // Browser console logging
 #[wasm_bindgen]
@@ -40,7 +40,7 @@ impl RobotSimulator {
     pub fn get_joint_positions(&self) -> JsValue {
         let positions = forward_kinematics(&self.robot);
 
-        // Convert Vec<JointPosition> to JavaScript array
+        // Convert Vec<JointPosition3D> to JavaScript array
         serde_wasm_bindgen::to_value(&positions)
             .unwrap_or_else(|_| JsValue::NULL)
     }

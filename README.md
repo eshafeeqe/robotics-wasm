@@ -19,7 +19,7 @@ The goal of this project is to create a high-performance, client-side robotics s
 - **Core Logic:** Rust (compiled to WASM)
 - **Frontend:** HTML/JavaScript (Native ES6 Modules)
 - **Build Tool:** `wasm-pack`
-- **Math:** Custom 2D homogeneous transformation matrices
+- **Math:** nalgebra (3D homogeneous transformation matrices)
 - **Visualization:** Canvas 2D API
 
 ## 🛠 Prerequisites
@@ -81,9 +81,9 @@ All tests should pass (14 tests covering geometry transformations, robot configu
 ├── Cargo.toml              # Rust configuration and dependencies
 ├── src/
 │   ├── lib.rs              # WASM interface and main entry point
-│   ├── geometry.rs         # 2D geometry primitives and transformations
+│   ├── geometry3d.rs       # 3D geometry with nalgebra::Matrix4
 │   ├── robot.rs            # Robot arm configuration
-│   └── kinematics.rs       # Forward kinematics algorithm
+│   └── kinematics.rs       # Forward kinematics algorithm (3D)
 ├── index.html              # Main UI with canvas and controls
 ├── app.js                  # JavaScript application logic
 ├── styles.css              # Clean, Desmos-inspired styling
@@ -95,16 +95,18 @@ All tests should pass (14 tests covering geometry transformations, robot configu
 
 ### The Math
 
-The simulator uses **homogeneous transformation matrices** to compute forward kinematics:
+The simulator uses **nalgebra Matrix4** for 3D homogeneous transformation matrices to compute forward kinematics:
 
 1. Start at the origin (base position)
 2. For each joint:
-   - Rotate by the joint angle θᵢ
-   - Translate along the link length Lᵢ
-   - Record the new joint position
+   - Rotate by the joint angle θᵢ around Z-axis (planar motion)
+   - Translate along the link length Lᵢ in X direction
+   - Record the new joint position in 3D (x, y, z)
    - Compose transformations for the next joint
 
 The result is a chain of positions from base → joint1 → joint2 → end-effector.
+
+**Phase 2 Update:** All calculations now use 3D transforms with nalgebra, even though planar robots have Z=0. This prepares the codebase for future spatial robots and DH parameters.
 
 ### The Pipeline
 
@@ -133,11 +135,16 @@ Visual Feedback!
 - Forward kinematics with homogeneous transforms
 - Interactive canvas visualization
 
-### Phase 2: Enhanced Math & DH Parameters
+### Phase 2: ✅ nalgebra Migration Complete
+- Migrated to `nalgebra` Matrix4 for 3D math
+- Clean break from custom 2D transforms
+- 3D positions (Z always 0 for planar robots)
+- Foundation for future 3D robots
+
+### Phase 2b: Enhanced Math & DH Parameters (Next)
 - Implement Denavit-Hartenberg (DH) parameter tables
 - Support arbitrary-DOF robots
 - Add workspace visualization
-- Migrate to `nalgebra` for 3D math
 
 ### Phase 3: 3D Visualization
 - Integrate Three.js / React-Three-Fiber

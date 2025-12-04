@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Rust + WebAssembly (WASM) robotics simulator prototype ("Robo-Desmos") designed to run high-performance robotics calculations in the browser. The project compiles Rust code to WASM and exposes functions to JavaScript for a client-side robotics playground.
 
+**Phase 2 (Current):** Migrated from custom 2D transforms to nalgebra Matrix4 for 3D homogeneous transformations.
+
 ## Build Commands
 
 ### Building the WASM Module
@@ -32,28 +34,35 @@ cargo test           # Run tests (if any exist)
 
 ### Core Structure
 - **src/lib.rs**: Main WASM entry point. Functions marked with `#[wasm_bindgen]` are exposed to JavaScript.
-- **Cargo.toml**: Configured with `crate-type = ["cdylib"]` to produce a WASM binary. Uses `wasm-bindgen` as the Rust-JS bridge.
+- **src/geometry3d.rs**: 3D geometry primitives using nalgebra::Matrix4 for homogeneous transformations.
+- **src/robot.rs**: Robot arm configuration (link lengths, joint angles).
+- **src/kinematics.rs**: Forward kinematics computation using 3D transforms.
+- **Cargo.toml**: Configured with `crate-type = ["cdylib"]` to produce a WASM binary. Uses `wasm-bindgen` and `nalgebra`.
 - **index.html**: Frontend that imports WASM module as ES6 module from `./pkg/robotics_wasm.js`.
 
 ### Rust-JavaScript Bridge
 - Functions exposed via `#[wasm_bindgen]` macro become callable from JavaScript
 - Browser console API is accessed via extern "C" declaration with `#[wasm_bindgen(js_namespace = console)]`
 - The init function from wasm-bindgen must be called before using any Rust functions
+- Complex data (positions) serialized with serde-wasm-bindgen
 
-### Current Implementation
-The codebase currently contains a simple "hello world" function (`hello_robotics`) that demonstrates:
-1. Receiving input from JavaScript
-2. Logging to browser console from Rust
-3. Returning strings back to JavaScript
+### Current Implementation (Phase 2)
+The codebase implements a 2-DOF planar robot arm with:
+1. 3D homogeneous transforms using nalgebra Matrix4
+2. Forward kinematics returning 3D positions (Z=0 for planar)
+3. Interactive sliders for joint angle control
+4. Real-time Canvas 2D visualization
 
 ### Future Roadmap
 The project plans to evolve through these phases:
-1. Port spatial math (homogeneous transforms) to Rust
-2. Implement DH-parameter solver
-3. Integrate Three.js / React-Three-Fiber for 3D visualization
-4. Implement inverse kinematics solver
+1. ✅ Phase 1: 2-DOF planar robot with custom 2D transforms
+2. ✅ Phase 2: Migrate to nalgebra for 3D math
+3. Phase 2b: Implement DH parameters
+4. Phase 2c: Support arbitrary-DOF robots
+5. Phase 3: Integrate Three.js for 3D visualization
+6. Phase 4: Implement inverse kinematics solver
 
-Future dependencies will likely include `nalgebra` for matrix operations and potentially `wgpu` for GPU acceleration.
+Current dependencies include `nalgebra` for matrix operations. Future may include `wgpu` for GPU acceleration.
 
 ## Development Notes
 

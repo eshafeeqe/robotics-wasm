@@ -199,10 +199,12 @@ class RobotVisualizerApp {
             return;
         }
 
-        // Convert world coordinates to canvas coordinates
+        // Convert world coordinates (3D) to canvas coordinates (2D)
+        // Ignoring Z coordinate for now (planar robots have Z=0)
         const canvasPositions = positions.map(pos => ({
             x: this.centerX + pos.x * this.scale,
             y: this.centerY - pos.y * this.scale // Flip Y for canvas
+            // pos.z ignored (always 0 for planar robots)
         }));
 
         // Draw links
@@ -256,10 +258,12 @@ class RobotVisualizerApp {
         if (endEffector) {
             const x = endEffector.x;
             const y = endEffector.y;
-            const distance = Math.sqrt(x * x + y * y);
+            const z = endEffector.z;
+            const distance = Math.sqrt(x * x + y * y + z * z);
 
             document.getElementById('pos-x').textContent = x.toFixed(3);
             document.getElementById('pos-y').textContent = y.toFixed(3);
+            document.getElementById('pos-z').textContent = z.toFixed(3);
             document.getElementById('pos-dist').textContent = distance.toFixed(3);
         }
     }
