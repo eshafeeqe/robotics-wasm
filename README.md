@@ -60,3 +60,13 @@ Browsers strictly block WASM files from loading directly from the hard drive for
 ├── index.html      # Frontend UI
 ├── pkg/            # (Generated) Compiled WASM and JS glue code
 └── .gitignore      # Git ignore rules
+
+Future Roadmap
+
+Phase 1: Port Basic Spatial Math (Homogeneous Transforms) to Rust.
+
+Phase 2: Implement DH-Parameter solver.
+
+Phase 3: Integrate Three.js / React-Three-Fiber for 3D visualization.
+
+Phase 4: Implement Inverse Kinematics solver.
